@@ -14,52 +14,59 @@ public class ClientHandler implements Runnable
 	static int maxsize = 999999999;
     static int byteread;
     static int current = 0;
-    
+    double i = 0;
 	public ClientHandler(Socket s)
 	{
 		socket = s;
 	}
 	
-	public void run()
+	public void turnon()
 	{
 		try
 		{
 			try
 			{
-				/*
-				int packetsize = 8192;
-				File test = new File("C:\\Users\\Patryk-student ELKI\\Desktop\\test\\e.ova");
+				
+				int packetsize = 50;
+				File test = new File("C:\\Users\\Patryk-student ELKI\\Desktop\\test\\BOT_LAB2_Patryk_Gozdera.pdf");
 				FileOutputStream fos = new FileOutputStream(test);
 				BufferedOutputStream bos = new BufferedOutputStream(fos);
-				double nosofpackets = Math.ceil(((int) (new File("D:\\Kali.ova")).length()) / packetsize);
-				for (double i=0; i<nosofpackets + 1; i++)
-				{
-					InputStream is = socket.getInputStream();
-					byte[] mybytearray = new byte[packetsize];
-					int bytesRead = is.read(mybytearray, 0, mybytearray.length);
-					System.out.println("Packet: " + (i+1));
+				int nosofpackets = ((int) (new File("D:\\aaa STUDIA SEM.5\\bot\\BOT_LAB2_Patryk_Gozdera.pdf")).length())/packetsize;
+				InputStream is = socket.getInputStream();
+				byte[] mybytearray = new byte[packetsize];
+				//for (double i=0; i<Math.abs(nosofpackets) + 1; i++)
+				
+					
+					while ((byteread = is.read(mybytearray, 0, mybytearray.length)) != -1 || i<(Math.abs(nosofpackets)))
+							{
+						System.out.println("Packet: " + (i+1));
 					bos.write(mybytearray, 0, mybytearray.length);
-				}				
+					i++;
+				
+							}
+					
+							
 				bos.flush();
 				fos.close();
-		      	*/
+		      	
 				
-				
+				/*
 				byte[] buffer = new byte[maxsize];
 				InputStream is = socket.getInputStream();
 		        File test = new File("C:\\Users\\Patryk-student ELKI\\Desktop\\test\\e.ova");
 		        test.createNewFile();
 		        FileOutputStream fos = new FileOutputStream(test);
-		        BufferedOutputStream out = new BufferedOutputStream(fos);      
+		        BufferedOutputStream bos = new BufferedOutputStream(fos);      
 
 		        while ((byteread = is.read(buffer, 0, buffer.length)) != -1)
 		        {
-		        	 out.write(buffer, 0, byteread);
+		        	 bos.write(buffer, 0, byteread);
 		        }
 
-		        out.flush();		        
+		        bos.flush();		        
 		        fos.close();
 		        is.close();
+		        */
 		        
 			}
 			finally
@@ -69,6 +76,18 @@ public class ClientHandler implements Runnable
 			}
 		}
 		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	public void run()
+	{
+		try 
+		{
+			turnon();
+		}
+		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
