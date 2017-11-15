@@ -47,7 +47,7 @@ public class Client
 					byte[] mybytearray = new byte[packetsize];
 					bis.read(mybytearray, 0, mybytearray.length);					
 					OutputStream outputStream = clientSocket.getOutputStream();
-					while ((len = dis.read(mybytearray, 0, mybytearray.length)) != -1 || i<(Math.abs(nosofpackets)))
+					while ((len = dis.read(mybytearray, 0, mybytearray.length)) != -1 && i<(Math.abs(nosofpackets)))
 					{
 					System.out.println("Packet: " + (i+1));
 					outputStream.write(mybytearray, 0, mybytearray.length);
