@@ -12,9 +12,9 @@ public class ClientHandler implements Runnable
 {
 	private Socket socket;
 	static int maxsize = 999999999;
-    static int byteread;
-    static int current = 0;
-    double i = 0;
+    	static int byteread;
+    	static int current = 0;
+    	double i = 0;
 	public ClientHandler(Socket s)
 	{
 		socket = s;
@@ -37,7 +37,7 @@ public class ClientHandler implements Runnable
 				//for (double i=0; i<Math.abs(nosofpackets) + 1; i++)
 				
 					
-					while ((byteread = is.read(mybytearray, 0, mybytearray.length)) != -1 || i<(Math.abs(nosofpackets)))
+					while ((byteread = is.read(mybytearray, 0, mybytearray.length)) != -1 && i<(Math.abs(nosofpackets)))
 							{
 						System.out.println("Packet: " + (i+1));
 					bos.write(mybytearray, 0, mybytearray.length);
