@@ -13,7 +13,6 @@ import java.net.Socket;
 public class ClientHandler implements Runnable
 {
 	private Socket socket;
-	static int maxsize = 999999999;
     static int byteread;
     static int current = 0;
     
@@ -28,41 +27,21 @@ public class ClientHandler implements Runnable
 		{
 			try
 			{
-				/*
-				int packetsize = 8192;
-				File test = new File("C:\\Users\\Patryk-student ELKI\\Desktop\\test\\e.ova");
-				FileOutputStream fos = new FileOutputStream(test);
-				BufferedOutputStream bos = new BufferedOutputStream(fos);
-				double nosofpackets = Math.ceil(((int) (new File("D:\\Kali.ova")).length()) / packetsize);
-				for (double i=0; i<nosofpackets + 1; i++)
-				{
-					InputStream is = socket.getInputStream();
-					byte[] mybytearray = new byte[packetsize];
-					int bytesRead = is.read(mybytearray, 0, mybytearray.length);
-					System.out.println("Packet: " + (i+1));
-					bos.write(mybytearray, 0, mybytearray.length);
-				}				
-				bos.flush();
-				fos.close();
-		      	*/
-				
-				
-				
+				int packetSize = 8192;
 				DataInputStream dis = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
 				String fileName = dis.readUTF();//tu sie wysyla nazwa pliku, moze sie pozniej przyda
-				long longFileSize = dis.readLong();
-				int intFileSize = dis.readInt();
-				byte[] buffer = new byte[intFileSize];//zamiast maxsize
+				long fileSize = dis.readLong();
+				byte[] buffer = new byte[packetSize];//tutaj ustalany jest rozmiar chunka
 		        File test = new File("C:\\Users\\mati0\\Desktop\\test\\simpsons.avi");
 		        test.createNewFile();
 		        FileOutputStream fos = new FileOutputStream(test);     
 		        int n = 0;
 		        
-		        while (longFileSize > 0 && (n = dis.read(buffer, 0, (int)Math.min(buffer.length, longFileSize))) != -1)
+		        while (fileSize > 0 && (n = dis.read(buffer, 0, (int)Math.min(buffer.length, fileSize))) != -1)
 		        {
 		        	fos.write(buffer,0,n);
 		            fos.flush();
-		            longFileSize -= n;
+		            fileSize -= n;
 		        }	
 		        
 		        fos.close();
