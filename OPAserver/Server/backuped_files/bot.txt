@@ -1,0 +1,11 @@
+Poradniki:
+https://www.youtube.com/watch?v=dk39uVyrS_o
+https://ask.wireshark.org/questions/29181/malware-analysis-in-wireshark-help
+https://ask.wireshark.org/questions/42626/is-there-any-malware-involved
+https://ask.wireshark.org/questions/11701/malware-on-network
+http://www.malware-traffic-analysis.net/tutorials/wireshark/index.html
+https://www.youtube.com/watch?v=_JjU4fbgkAc
+https://www.youtube.com/watch?v=U6ZveV0nDpk
+http://www.computerweekly.com/tip/Advanced-Wireshark-tutorial-Packet-and-network-security-analysis
+https://sekurak.pl/szybka-analiza-malware/
+https://github.com/rshipp/awesome-malware-analysis

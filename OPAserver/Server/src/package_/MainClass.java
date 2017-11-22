@@ -9,14 +9,21 @@ public class MainClass
 {
 	public static void main(String[] args)
 	{
-		new MainWindow();
-		System.out.println("elo");
+		try
+		{
+			new MainWindow();
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+				
 		String configPath = "config.properties";
 		ConfigReader readConfig = new ConfigReader();
 		try
 		{
-		Properties prop = readConfig.getProperties(configPath);
-        Config.readConstants(prop);        		
+			Properties prop = readConfig.getProperties(configPath);
+			Config.readConstants(prop);        		
 		}
 		catch (IOException e)
 		{

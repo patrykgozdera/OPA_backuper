@@ -2,15 +2,22 @@ package package_1;
 
 import java.io.IOException;
 import java.util.Properties;
-
 import javax.swing.JOptionPane;
+
 
 public class Main
 {
 	public static void main(String[] args)
 	{
-		new ClientWindow();
-		System.out.println("elo");
+		try
+		{
+			new ClientWindow();	 
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		
 		String configPath = "config.properties";
 		ConfigReader readConfig = new ConfigReader();
 		try
