@@ -1,181 +1,282 @@
 package package_;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.attribute.FileTime;
-import java.rmi.AccessException;
-import java.rmi.AlreadyBoundException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.text.SimpleDateFormat;
 
-public class ClientHandler implements Runnable
-{
+import javax.swing.JOptionPane;
+
+public class ClientHandler implements Runnable {
 	
-	private static final long serialVersionUID = -896079909733233717L;
 	private static Socket socket;
     private static int packetSize = 8192;	
     private static byte[] buffer = new byte[packetSize];
     private static long fileSize;
     private static long wholeFileSize;
-    private static Metadata metadata = new Metadata();
-    private static File metaFile = new File("temp/metadata.ser");
+    private static Metadata metadata;
     
-	public ClientHandler(Socket s) throws RemoteException
-	{
+	public ClientHandler(Socket s) throws RemoteException {
+		
 		socket = s;
 	}
 
-	public void run()
-	{
-			try
-			{				
-				//dalej standardzik, odbieramy metadane
-				metaFile.createNewFile();
+	public void run() {
+		
+		try	{
+				
+			MetadataInterface actionStub = (MetadataInterface)ServerConfiguration.rmiRegistry.lookup("controller");
+				
+			while (actionStub.returnServerAction() == 0) {
+					
+				actionStub = (MetadataInterface)ServerConfiguration.rmiRegistry.lookup("controller");
+				Thread.sleep(20);
+			}
+				
+			if (actionStub.returnServerAction() == 1) {
+					
 				DataInputStream dis = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
-				//wczytujemy metadane
-				loadMetadata(dis);
-				System.out.println("Metadane wczytane! hehe :V");
-				//dalej analizujemy metadane
+					
+				MetadataInterface metaStub = (MetadataInterface)ServerConfiguration.rmiRegistry.lookup("controller");
+				metadata = metaStub.returnMetadata();
+					
+				System.out.println("Metadane wczytane!");
+					
 				fileSize = metadata.fileSize;
 				wholeFileSize = fileSize;
-				String[] backupList = ServerConfiguration.rmiRegistry.list();
-				System.out.println("Odczytano obiekty z rejestru!");
-				boolean fileExists = false;
-				
-				for ( int i = 0; i < backupList.length; i++)
-				{
-					System.out.println(backupList[i]);
-					if (backupList[i].compareTo(metadata.fileName) == 0)
-						fileExists = true;	
+					
+				String[] list = metaStub.returnFiles();
+				int verOfFile = 0;
+				String noExtension = metadata.fileName.substring(0, metadata.fileName.lastIndexOf("."));
+				String extension = metadata.fileName.substring(metadata.fileName.lastIndexOf("."), metadata.fileName.length());
+					
+				for (int i = 0; i < list.length; i++) {
+					
+					if (list[i].contains(noExtension) && list[i].contains(extension)) {
+						
+						verOfFile++;
+					}
 				}
-				
-				if (fileExists == false)
-				{
-					FileImpl tempImpl = new FileImpl(0, metadata.fileName);
-					ServerConfiguration.rmiRegistry.bind(metadata.fileName, (MetadataInterface) UnicastRemoteObject.exportObject(tempImpl, 0));
+					
+				if (verOfFile == 0) {
+					
 					System.out.println("File is not backuped yet!");
+						
+					FileImpl infoStub = new FileImpl(1, 1);
+					ServerConfiguration.rmiRegistry.rebind("controller", infoStub);
+						
 					saveFile(dis);	
-					FileImpl tempImpl1 = new FileImpl(1, metadata.fileName);
-					ServerConfiguration.rmiRegistry.rebind(metadata.fileName, (MetadataInterface) UnicastRemoteObject.exportObject(tempImpl1, 0));
 					dis.close();
-					FileImpl tempImpl2 = new FileImpl(2, metadata.fileName);
-					ServerConfiguration.rmiRegistry.rebind(metadata.fileName, (MetadataInterface) UnicastRemoteObject.exportObject(tempImpl2, 0));
 				}
-				else
-				{
-					System.out.println("There is file called same name! It's got same size too! Checking other metadata...");
-					//pobieramy daty
-					FileImpl tempImpl = new FileImpl(0, metadata.fileName);
-					Metadata tempMeta = tempImpl.returnMetadata();
-					long modTime = tempMeta.modificationTime;
-					long crTime = tempMeta.creationTime;
-					long accTime = tempMeta.accessTime;
-					long size = tempMeta.fileSize;
-					//sprawdzamy czy pliki roznia sie datami modyfikacji itp.
-					if (size == metadata.fileSize && modTime == metadata.modificationTime && crTime == metadata.creationTime && accTime == metadata.accessTime)
-					{
-						System.out.println("This file is already backuped!");
-						FileImpl tempImpl1 = new FileImpl(3, metadata.fileName);
-						ServerConfiguration.rmiRegistry.rebind(metadata.fileName, (MetadataInterface) UnicastRemoteObject.exportObject(tempImpl1, 0));
+				else {
+					
+					System.out.println("There is file called same name! Checking other metadata...");
+						
+					boolean isTheSame = false;
+						
+					if (verOfFile == 1)	{
+						
+						String newName = noExtension + extension;
+							
+						Metadata tempMetadata = metaStub.returnMetadata(newName);
+						long modTime = tempMetadata.modificationTime;
+						long crTime = tempMetadata.creationTime;
+						long accTime = tempMetadata.accessTime;
+						long size = tempMetadata.fileSize;
+							
+						if (size == metadata.fileSize && modTime == metadata.modificationTime && 
+								crTime == metadata.creationTime && accTime == metadata.accessTime) {
+							
+							JOptionPane.showMessageDialog(null, "This file is already backuped!");
+							isTheSame = true;
+						}
 					}
-					else
-					{
-						System.out.println("This version of file does not have a backup!");
-						FileImpl tempImpl2 = new FileImpl(0, metadata.fileName);
-						ServerConfiguration.rmiRegistry.bind(metadata.fileName, (MetadataInterface) UnicastRemoteObject.exportObject(tempImpl2, 0));
+					else {
+						
+						String newName = noExtension + extension;
+							
+						Metadata tempMetadata = metaStub.returnMetadata(newName);
+						long modTime = tempMetadata.modificationTime;
+						long crTime = tempMetadata.creationTime;
+						long accTime = tempMetadata.accessTime;
+						long size = tempMetadata.fileSize;
+							
+						if (size == metadata.fileSize && modTime == metadata.modificationTime && 
+								crTime == metadata.creationTime && accTime == metadata.accessTime) {
+							
+							isTheSame = true;
+						}
+							
+						for (int i = 1; i < verOfFile; i++)	{
+							
+							newName = noExtension + "(" + i + ")" + extension;
+							
+							tempMetadata = metaStub.returnMetadata(newName);
+							modTime = tempMetadata.modificationTime;
+							crTime = tempMetadata.creationTime;
+							accTime = tempMetadata.accessTime;
+							size = tempMetadata.fileSize;
+							
+							if (size == metadata.fileSize && modTime == metadata.modificationTime && 
+									crTime == metadata.creationTime && accTime == metadata.accessTime) {
+								
+								isTheSame = true;
+							}
+						}
+					}
+						
+					if (isTheSame == false)	{
+						
+						System.out.println("This version of file is not backuped yet!");
+						FileImpl infoStub = new FileImpl(1, 1);
+						ServerConfiguration.rmiRegistry.rebind("controller", infoStub);
+							
+						metadata.fileName = noExtension + "(" + verOfFile + ")" + extension;
+							
 						saveFile(dis);	
-						FileImpl tempImpl3 = new FileImpl(1, metadata.fileName);
-						ServerConfiguration.rmiRegistry.rebind(metadata.fileName, (MetadataInterface) UnicastRemoteObject.exportObject(tempImpl3, 0));
 						dis.close();
-						FileImpl tempImpl4 = new FileImpl(2, metadata.fileName);
-						ServerConfiguration.rmiRegistry.rebind(metadata.fileName, (MetadataInterface) UnicastRemoteObject.exportObject(tempImpl4, 0));
 					}
+					else {
+						
+						JOptionPane.showMessageDialog(null, "This file is already backuped!");
+						FileImpl infoStub = new FileImpl(0, 2);
+						ServerConfiguration.rmiRegistry.rebind("controller", infoStub);
+					}		
 				}
-			} catch (AlreadyBoundException e) {
-				e.printStackTrace();
-			} catch (AccessException e) {
-				e.printStackTrace();
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
+					
+				FileImpl endStub = new FileImpl(0, 2);
+				ServerConfiguration.rmiRegistry.rebind("controller", endStub);
 			}
-			finally
+			else if (actionStub.returnServerAction() == 2)
 			{
-				try{
-					//zamykamy socket					
-					FileImpl tempImpl = new FileImpl(3, metadata.fileName);
-					ServerConfiguration.rmiRegistry.rebind(metadata.fileName, tempImpl);
-					System.out.println("File already archieved.");
-					socket.close();
-
-				} catch (AccessException e) {
-					e.printStackTrace();
-				} catch (RemoteException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
+				
+				DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+				
+				MetadataInterface metaStub = (MetadataInterface)ServerConfiguration.rmiRegistry.lookup("controller");
+				metadata = metaStub.returnMetadata();
+				
+				System.out.println("Metadane wczytane!");
+				
+				fileSize = metadata.fileSize;
+				wholeFileSize = fileSize;
+				
+				FileImpl infoStub = new FileImpl(2, 1, metadata.fileName, metadata.fileSize, metadata.modificationTime, metadata.creationTime, metadata.accessTime);
+				ServerConfiguration.rmiRegistry.rebind("controller", infoStub);
+				
+				sendFile(dos);
+				dos.close();
+				
+				JOptionPane.showMessageDialog(null, "Sending completed!");
+				
+				actionStub = (MetadataInterface) ServerConfiguration.rmiRegistry.lookup("controller");
+				
+				while (actionStub.returnServerAction() != 3) {
+					
+					actionStub = (MetadataInterface) ServerConfiguration.rmiRegistry.lookup("controller");
+					Thread.sleep(20);
 				}
+				
+				FileImpl endStub = new FileImpl(0, 0);
+				ServerConfiguration.rmiRegistry.rebind("controller", endStub);
 			}
-	}	
-	
-	private static void loadMetadata(DataInputStream dis)
-	{		
-		try {
-			long metadataSize = dis.readLong();
-			byte[] metaBuffer = new byte[(int)metadataSize];
-			dis.read(metaBuffer, 0, (int)metadataSize);
-			FileOutputStream fos = new FileOutputStream(metaFile);
-			fos.write(metaBuffer);
-			fos.flush();
-			fos.close();
-			FileInputStream fis = new FileInputStream(metaFile);
-			ObjectInputStream ois = new ObjectInputStream(fis);
-			metadata = (Metadata)ois.readObject();
-			ois.close();
-			fis.close();	
+			else if (actionStub.returnServerAction() == 3)
+			{
+				
+				MetadataInterface metaStub = (MetadataInterface)ServerConfiguration.rmiRegistry.lookup("controller");
+				metadata = metaStub.returnMetadata();
+				File df = new File("backuped_files/" + metadata.fileName);
+				Files.delete(df.toPath());
+				FileImpl endStub = new FileImpl(0, 3);
+				ServerConfiguration.rmiRegistry.rebind("controller",  endStub);
+			}
+		} catch (RemoteException e) {
+				
+			e.printStackTrace();
 		} catch (IOException e) {
+			
 			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
+		} catch (NotBoundException e) {
+				
 			e.printStackTrace();
+		} catch (InterruptedException e) {
+				
+			e.printStackTrace();
+		}
+		finally
+		{
+
 		}
 	}
 	
-	private static void saveFile(DataInputStream dis)
-	{				        
+	private static void saveFile(DataInputStream dis) {
+		
 		try {
-			File test = new File("backuped_files/" + metadata.fileName);//tutaj uzywam juz wlasciwej nazwy pliku
+			
+			File test = new File("backuped_files/" + metadata.fileName);
 			test.createNewFile();
 			FileOutputStream fos = new FileOutputStream(test);
+			
 			int n = 0;
 			int i = 0;
-			while (fileSize > 0 && (n = dis.read(buffer, 0, (int)Math.min(buffer.length, fileSize))) != -1)
-			{
+			
+			while (fileSize > 0 && (n = dis.read(buffer, 0, (int)Math.min(buffer.length, fileSize))) != -1) {
+				
 				fos.write(buffer, 0, n);
 				fos.flush();
 				fileSize -= n;
 				System.out.println("Processed: " + (100 - fileSize * 100 / wholeFileSize) + "%");
 				MainWindow.progressBar.setValue((int)(100 - fileSize * 100 / wholeFileSize));
 				i++;
-			}		       
+			}
+			
 			fos.close();
-			//strumien jest pusty, plik gotowy, zmieniamy daty naszego pliku
+
 	        Files.setAttribute(test.toPath(), "creationTime", FileTime.fromMillis(metadata.creationTime));
 	        Files.setAttribute(test.toPath(), "lastAccessTime", FileTime.fromMillis(metadata.accessTime));	
 	        Files.setAttribute(test.toPath(), "lastModifiedTime", FileTime.fromMillis(metadata.modificationTime));
-	        //tutaj mozna sobie zobaczyc te informacje na ekranie konsoli
+
 	        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 			System.out.println("Nazwa: " + metadata.fileName + " Data: " + sdf.format(metadata.modificationTime) + " " +
 					sdf.format(metadata.creationTime) + " " + sdf.format(metadata.accessTime) + " - Pakiety: " + i);
 		} catch (IOException e) {
+			
+			e.printStackTrace();
+		}
+	}
+	
+	private static void sendFile(DataOutputStream dos) {
+		
+		try {
+			
+			FileInputStream fis = new FileInputStream("backuped_files/" + metadata.fileName);
+			int n = 0;
+			int i = 0;
+
+			while (fileSize > 0 && (n = fis.read(buffer, 0, (int)Math.min(buffer.length, fileSize))) != -1) {	
+				
+				dos.write(buffer,0,n);
+				dos.flush();	
+				
+				fileSize -= n;		
+				MainWindow.progressBar.setValue((int)(100 - fileSize * 100 / wholeFileSize));
+				System.out.println("Processed: " + (100 - fileSize * 100 / wholeFileSize) + "%");					
+				i++;
+			}
+			
+			fis.close();
+			System.out.println("Pakiety: " + i);		
+		} catch (IOException e) {
+			
 			e.printStackTrace();
 		}
 	}

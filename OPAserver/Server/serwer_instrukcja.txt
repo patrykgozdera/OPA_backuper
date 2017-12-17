@@ -1,0 +1,7 @@
+W celu uruchomienia aplikacji serwera, nale¿y zapewniæ na komputerze œrodowisko Java SE Runtime Environment 8 lub nowsze. 
+
+Nastêpnie wymagane jest uruchomienie pliku BackuperServer.jar, który znajduje siê w katalogu z aplikacj¹. 
+
+Uwaga - aplikacja jest skonfigurowana i gotowa do po³¹czenia z serwerem, wszelkie zmiany w plikach konfiguracyjnych
+nale¿y wykonywaæ z rozs¹dkiem i na w³asn¹ odpowiedzialnoœæ. Aplikacjê nale¿y uruchomiæ w pierwszej kolejnoœci
+- dopiero potem klient. Odpowiada za to przycisk START, rozpoczynaj¹cy pracê serwera (nas³uchiwanie na akcjê od klienta).

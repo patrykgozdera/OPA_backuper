@@ -1,0 +1,11 @@
+W celu uruchomienia aplikacji klienckiej, nale¿y zapewniæ na komputerze œrodowisko Java SE Runtime Environment 8 lub nowsze. 
+
+Nastêpnie wymagane jest uruchomienie pliku BackuperClient.jar, który znajduje siê w katalogu z aplikacj¹. 
+
+Uwaga - aplikacja jest skonfigurowana i gotowa do po³¹czenia z serwerem, wszelkie zmiany w plikach konfiguracyjnych
+nale¿y wykonywaæ z rozs¹dkiem i na w³asn¹ odpowiedzialnoœæ. Aplikacja kliencka bêdzie dzia³aæ poprawnie, tylko gdy 
+po³¹czymy j¹ z nas³uchuj¹cym serwerem.
+
+Okno klienta zawiera przyciski funkcyjne, umo¿liwiaj¹ce wys³anie (SEND) pliku (Add File) (lub plików – Add directory)
+na serwer w celu archiwizacji, wys³anie plików o ustalonych porach (SYNC), sprawdzenie jakie pliki s¹ obecnie 
+zarchiwizowane (Backuped files…), pobranie (lub usuwanie) plików z serwera, a tak¿e pasek postêpu operacji. 
